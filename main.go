@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
@@ -17,10 +18,13 @@ var (
 	//go:embed db/schema/*.sql
 	embedMigrations embed.FS
 	PORT            string
+	JWT_SECRET      string
 )
 
 const (
-	DB_PATH string = "app.db"
+	DB_PATH        string        = "app.db"
+	JWT_EXPIRES_IN time.Duration = time.Hour * 1
+	AUTH_KEY       string        = "auth_key"
 )
 
 // initialize everything
@@ -32,6 +36,10 @@ func init() {
 	port := os.Getenv("PORT")
 	validateEnv(port, "PORT")
 	PORT = port
+
+	jwtSecret := os.Getenv("JWT_SECRET")
+	validateEnv(jwtSecret, "JWT_SECRET")
+	JWT_SECRET = jwtSecret
 
 	log.Println("env variables loaded")
 

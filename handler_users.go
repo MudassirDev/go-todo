@@ -79,3 +79,69 @@ func (apiCfg *APIConfig) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	respondWithJSON(w, http.StatusCreated, user)
 }
+
+func (apiCfg *APIConfig) LoginUser(w http.ResponseWriter, r *http.Request) {
+	err := validateContentType(r.Header, JSON_TYPE)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "invalid content type", err)
+		return
+	}
+
+	var req UserRequest
+	decoder := json.NewDecoder(r.Body)
+	defer r.Body.Close()
+
+	if err := decoder.Decode(&req); err != nil {
+		respondWithError(w, http.StatusInternalServerError, "failed to decode request", err)
+		return
+	}
+
+	user, err := apiCfg.DB.GetUserWithUsername(context.Background(), req.Username)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "no user found!", err)
+		return
+	}
+
+	err = auth.VerifyPassword(req.Password, user.Password)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "wrong password!", err)
+		return
+	}
+
+	userId, ok := user.ID.(string)
+	if !ok {
+		respondWithError(w, http.StatusInternalServerError, "failed to create access token!", fmt.Errorf("user id not string!"))
+		return
+	}
+
+	token, err := auth.CreateJWT(JWT_SECRET, JWT_EXPIRES_IN, userId)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "failed to create access token!", err)
+		return
+	}
+
+	cookie := http.Cookie{
+		Name:     AUTH_KEY,
+		Value:    token,
+		Path:     "/",
+		Expires:  time.Now().Add(JWT_EXPIRES_IN),
+		MaxAge:   int(JWT_EXPIRES_IN),
+		Secure:   false,
+		HttpOnly: false,
+	}
+
+	http.SetCookie(w, &cookie)
+	respondWithJSON(w, http.StatusOK, struct {
+		ID        any       `json:"id"`
+		Name      string    `json:"name"`
+		Username  string    `json:"username"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"updated_at"`
+	}{
+		ID:        user.ID,
+		Name:      user.Name,
+		Username:  user.Username,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	})
+}

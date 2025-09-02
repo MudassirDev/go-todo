@@ -19,6 +19,7 @@ func CreateMux() *http.ServeMux {
 	apiCfg.DB = queries
 
 	mux.HandleFunc("POST /api/users/create", apiCfg.CreateUser)
+	mux.HandleFunc("POST /api/users/login", apiCfg.LoginUser)
 
 	return mux
 }
