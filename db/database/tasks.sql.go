@@ -12,16 +12,16 @@ import (
 
 const createTask = `-- name: CreateTask :one
 INSERT INTO tasks (
-  id, userId, task, created_at, updated_at
+  id, user_id, task, created_at, updated_at
 ) VALUES (
   ?, ?, ?, ?, ?
 )
-RETURNING id, userid, task, is_completed, created_at, updated_at
+RETURNING id, user_id, task, is_completed, created_at, updated_at
 `
 
 type CreateTaskParams struct {
 	ID        interface{}
-	Userid    interface{}
+	UserID    interface{}
 	Task      string
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -30,7 +30,7 @@ type CreateTaskParams struct {
 func (q *Queries) CreateTask(ctx context.Context, arg CreateTaskParams) (Task, error) {
 	row := q.db.QueryRowContext(ctx, createTask,
 		arg.ID,
-		arg.Userid,
+		arg.UserID,
 		arg.Task,
 		arg.CreatedAt,
 		arg.UpdatedAt,
@@ -38,11 +38,25 @@ func (q *Queries) CreateTask(ctx context.Context, arg CreateTaskParams) (Task, e
 	var i Task
 	err := row.Scan(
 		&i.ID,
-		&i.Userid,
+		&i.UserID,
 		&i.Task,
 		&i.IsCompleted,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const deleteTaskWithID = `-- name: DeleteTaskWithID :exec
+DELETE FROM tasks WHERE id = ? AND user_id = ?
+`
+
+type DeleteTaskWithIDParams struct {
+	ID     interface{}
+	UserID interface{}
+}
+
+func (q *Queries) DeleteTaskWithID(ctx context.Context, arg DeleteTaskWithIDParams) error {
+	_, err := q.db.ExecContext(ctx, deleteTaskWithID, arg.ID, arg.UserID)
+	return err
 }

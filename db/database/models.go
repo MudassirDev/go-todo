@@ -10,7 +10,7 @@ import (
 
 type Task struct {
 	ID          interface{}
-	Userid      interface{}
+	UserID      interface{}
 	Task        string
 	IsCompleted bool
 	CreatedAt   time.Time
