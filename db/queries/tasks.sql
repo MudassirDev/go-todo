@@ -11,3 +11,6 @@ DELETE FROM tasks WHERE id = ? AND user_id = ?;
 
 -- name: UpdateTaskWithID :one
 UPDATE tasks SET is_completed = ? WHERE id = ? AND user_id = ? RETURNING *;
+
+-- name: GetTasksWithUserID :many
+SELECT * FROM tasks WHERE user_id = ?;

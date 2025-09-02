@@ -157,3 +157,21 @@ func (apiCfg *APIConfig) UpdateTask() http.Handler {
 		respondWithJSON(w, http.StatusOK, task)
 	})
 }
+
+func (apiCfg *APIConfig) handlerTasks() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		rawUser := r.Context().Value(AUTH_KEY)
+		user, ok := rawUser.(database.GetUserWithUserIDRow)
+		if !ok {
+			respondWithError(w, http.StatusUnauthorized, "not logged in!", fmt.Errorf("user type not matched!"))
+			return
+		}
+		tasks, err := apiCfg.DB.GetTasksWithUserID(context.Background(), user.ID)
+		if err != nil {
+			Templates.ExecuteTemplate(w, "tasks", nil)
+			return
+		}
+
+		Templates.ExecuteTemplate(w, "tasks", tasks)
+	})
+}
