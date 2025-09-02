@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"embed"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -15,6 +16,7 @@ var (
 	DB_CONN *sql.DB
 	//go:embed db/schema/*.sql
 	embedMigrations embed.FS
+	PORT            string
 )
 
 const (
@@ -29,6 +31,7 @@ func init() {
 
 	port := os.Getenv("PORT")
 	validateEnv(port, "PORT")
+	PORT = port
 
 	log.Println("env variables loaded")
 
@@ -59,6 +62,20 @@ func init() {
 
 func main() {
 	defer DB_CONN.Close()
+
+	log.Println("setting up server")
+
+	mux := CreateMux()
+
+	srv := http.Server{
+		Addr:    ":" + PORT,
+		Handler: mux,
+	}
+
+	log.Println("server setup complete")
+
+	log.Printf("server is listening, please visit http://localhost:%v", PORT)
+	log.Fatal(srv.ListenAndServe())
 }
 
 func validateEnv(env, envName string) {
