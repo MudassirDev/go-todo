@@ -1,9 +1,11 @@
 package auth
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -37,4 +39,31 @@ func CreateJWT(jwtSecretString string, expiresIn time.Duration, userId string) (
 		Subject:   userId,
 	})
 	return token.SignedString(jwtSecret)
+}
+
+func VerifyJWT(jwtSecretString string, tokenString string) (uuid.UUID, error) {
+	claims := jwt.RegisteredClaims{}
+	token, err := jwt.ParseWithClaims(tokenString, &claims, func(t *jwt.Token) (any, error) {
+		return []byte(jwtSecretString), nil
+	})
+	issuer, err := token.Claims.GetIssuer()
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	if issuer != ISSUER {
+		return uuid.Nil, fmt.Errorf("invalid issuer")
+	}
+
+	rawId, err := token.Claims.GetSubject()
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	id, err := uuid.Parse(rawId)
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	return id, nil
 }

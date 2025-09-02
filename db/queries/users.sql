@@ -8,3 +8,6 @@ RETURNING id, name, username, created_at, updated_at;
 
 -- name: GetUserWithUsername :one
 SELECT * FROM users WHERE username = ?;
+
+-- name: GetUserWithUserID :one
+SELECT id, name, username, created_at, updated_at FROM users WHERE id = ?;

@@ -56,6 +56,31 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 	return i, err
 }
 
+const getUserWithUserID = `-- name: GetUserWithUserID :one
+SELECT id, name, username, created_at, updated_at FROM users WHERE id = ?
+`
+
+type GetUserWithUserIDRow struct {
+	ID        interface{}
+	Name      string
+	Username  string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+func (q *Queries) GetUserWithUserID(ctx context.Context, id interface{}) (GetUserWithUserIDRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserWithUserID, id)
+	var i GetUserWithUserIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Username,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getUserWithUsername = `-- name: GetUserWithUsername :one
 SELECT id, name, username, password, created_at, updated_at FROM users WHERE username = ?
 `

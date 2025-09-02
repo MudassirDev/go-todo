@@ -8,6 +8,14 @@ import (
 	"time"
 )
 
+type Task struct {
+	ID        interface{}
+	Userid    interface{}
+	Task      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
 type User struct {
 	ID        interface{}
 	Name      string
