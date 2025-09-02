@@ -9,11 +9,12 @@ import (
 )
 
 type Task struct {
-	ID        interface{}
-	Userid    interface{}
-	Task      string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID          interface{}
+	Userid      interface{}
+	Task        string
+	IsCompleted bool
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 type User struct {

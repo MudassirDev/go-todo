@@ -16,7 +16,7 @@ INSERT INTO tasks (
 ) VALUES (
   ?, ?, ?, ?, ?
 )
-RETURNING id, userid, task, created_at, updated_at
+RETURNING id, userid, task, is_completed, created_at, updated_at
 `
 
 type CreateTaskParams struct {
@@ -40,6 +40,7 @@ func (q *Queries) CreateTask(ctx context.Context, arg CreateTaskParams) (Task, e
 		&i.ID,
 		&i.Userid,
 		&i.Task,
+		&i.IsCompleted,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
