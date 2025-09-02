@@ -109,3 +109,51 @@ func (apiCfg *APIConfig) DeleteTask() http.Handler {
 		})
 	})
 }
+
+func (apiCfg *APIConfig) UpdateTask() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		type Request struct {
+			TaskID      string `json:"task_id"`
+			IsCompleted bool   `json:"is_completed"`
+		}
+
+		rawUser := r.Context().Value(AUTH_KEY)
+		user, ok := rawUser.(database.GetUserWithUserIDRow)
+		if !ok {
+			respondWithError(w, http.StatusUnauthorized, "not logged in!", fmt.Errorf("user type not matched!"))
+			return
+		}
+
+		err := validateContentType(r.Header, JSON_TYPE)
+		if err != nil {
+			respondWithError(w, http.StatusBadRequest, "invalid content type", err)
+			return
+		}
+
+		var req Request
+		decoder := json.NewDecoder(r.Body)
+		defer r.Body.Close()
+
+		if err := decoder.Decode(&req); err != nil {
+			respondWithError(w, http.StatusInternalServerError, "failed to decode request!", err)
+			return
+		}
+
+		if req.TaskID == "" {
+			respondWithError(w, http.StatusBadRequest, "task id cannot be empty!", fmt.Errorf("no task id"))
+			return
+		}
+
+		task, err := apiCfg.DB.UpdateTaskWithID(context.Background(), database.UpdateTaskWithIDParams{
+			IsCompleted: req.IsCompleted,
+			ID:          req.TaskID,
+			UserID:      user.ID,
+		})
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "failed to update task", err)
+			return
+		}
+
+		respondWithJSON(w, http.StatusOK, task)
+	})
+}

@@ -60,3 +60,27 @@ func (q *Queries) DeleteTaskWithID(ctx context.Context, arg DeleteTaskWithIDPara
 	_, err := q.db.ExecContext(ctx, deleteTaskWithID, arg.ID, arg.UserID)
 	return err
 }
+
+const updateTaskWithID = `-- name: UpdateTaskWithID :one
+UPDATE tasks SET is_completed = ? WHERE id = ? AND user_id = ? RETURNING id, user_id, task, is_completed, created_at, updated_at
+`
+
+type UpdateTaskWithIDParams struct {
+	IsCompleted bool
+	ID          interface{}
+	UserID      interface{}
+}
+
+func (q *Queries) UpdateTaskWithID(ctx context.Context, arg UpdateTaskWithIDParams) (Task, error) {
+	row := q.db.QueryRowContext(ctx, updateTaskWithID, arg.IsCompleted, arg.ID, arg.UserID)
+	var i Task
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Task,
+		&i.IsCompleted,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
